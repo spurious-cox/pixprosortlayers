@@ -1,0 +1,75 @@
+#!/bin/zsh
+# Build, sign and install PixProSortLayers.app — v1.1.0
+#
+#   ./build.sh [--no-install]
+#
+# Installing is the default, as in every other project here.
+#
+# osacompile writes a bare applet: no CFBundleIdentifier, the stock applet
+# icon, no version. All three are put back below, the same way
+# PixProTransform's build does it, because codesign seals whatever it finds —
+# with no identifier it seals the bundle NAME instead.
+set -e
+cd "${0:A:h}"
+
+APP="PixProSortLayers.app"
+SIGN_ID="4208ABA3EC12F24C1F09C7BB624EFF68B44259DB"   # Developer ID Application
+
+if ! security find-identity -p codesigning | grep -q "$SIGN_ID"; then
+    echo "error: signing identity $SIGN_ID not in keychain" >&2
+    exit 1
+fi
+
+echo "==> compiling"
+rm -rf "$APP"
+osacompile -o "$APP" PixProSortLayers.applescript
+
+echo "==> installing the icon"
+# osacompile ships the stock applet icon, and writes an Assets.car whose
+# CFBundleIconName WINS over CFBundleIconFile — so a custom icns can sit in
+# the bundle and never be used. Both have to go.
+cp PixProSortLayers.icns "$APP/Contents/Resources/PixProSortLayers.icns"
+rm -f "$APP/Contents/Resources/applet.icns" "$APP/Contents/Resources/Assets.car"
+
+echo "==> restoring bundle identity (osacompile drops it)"
+/usr/bin/python3 - "$APP" <<'PY'
+import plistlib, sys
+p = sys.argv[1] + "/Contents/Info.plist"
+d = plistlib.load(open(p, "rb"))
+d.pop("CFBundleIconName", None)
+d.update({
+    "CFBundleName": "PixProSortLayers",
+    "CFBundleDisplayName": "PixProSortLayers",
+    "CFBundleIdentifier": "com.timmccoy.pixprosortlayers",
+    "CFBundleShortVersionString": "2.0.0",
+    "CFBundleVersion": "2.0.0",
+    "NSHumanReadableCopyright": "Copyright © 2026 Tim McCoy. All rights reserved.",
+    "CFBundleGetInfoString": "PixProSortLayers — sort selected layers by their position on canvas.",
+    "NSAppleEventsUsageDescription":
+        "PixProSortLayers reorders the selected layers in Pixelmator Pro for you.",
+    "CFBundleIconFile": "PixProSortLayers",
+})
+plistlib.dump(d, open(p, "wb"))
+PY
+
+echo "==> signing with Developer ID"
+codesign --force --deep --timestamp --options runtime \
+    --entitlements "$HOME/My_Applications/_signing/pixpro-applet.entitlements" \
+    --sign "$SIGN_ID" "$APP"
+codesign --verify --deep --strict "$APP"
+
+if [[ "$1" == "--no-install" ]]; then
+    echo "==> --no-install: built at $PWD/$APP"
+    exit 0
+fi
+
+echo "==> installing to /Applications"
+pkill -x PixProSortLayers 2>/dev/null || true
+rm -rf "/Applications/$APP"
+cp -R "$APP" /Applications/
+xattr -dr com.apple.quarantine "/Applications/$APP" 2>/dev/null || true
+codesign -dv "/Applications/$APP" 2>&1 | grep -E "Identifier=|Authority="
+plutil -extract CFBundleShortVersionString raw "/Applications/$APP/Contents/Info.plist"
+echo
+echo "Not yet notarized. To notarize and staple:"
+echo "  ~/My_Applications/_signing/pixpro_release.sh all /Applications/$APP"
