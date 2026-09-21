@@ -1,4 +1,4 @@
-# PixProSortLayers
+# PixProSortLayers 2.0.2
 
 Reorders the selected Pixelmator Pro layers to match where they sit on the
 canvas: **Horizontal** puts the leftmost layer at the top of the Layers list,
@@ -33,25 +33,6 @@ restored at the end.
 through the Standard Suite `move` command, which the app's dictionary inherits
 from CocoaStandard.
 
-## What the rewrite fixed
-
-The original opened with `tell application "Pixelmator Pro"` — a name resolved
-when the script was **compiled**. After the Creator Studio rebrand that name
-points at whichever build macOS prefers, and more than one copy of a build can
-be installed, so the app drove the wrong copy or launched one with no document
-open.
-
-It now finds the running Pixelmator the way every other PixPro app does: `ps`
-gives the bundle path of each running Pixelmator process, and each candidate is
-confirmed by the bundle id in its own `Info.plist`. The frontmost is preferred,
-then any with a document open. Nothing depends on the app's name or location,
-so renamed bundles and copies in `~/Applications` work too. The classic
-Pixelmator is excluded — its dictionary is different and it would fail halfway
-through.
-
-Also added: guards for Pixelmator not running, no document open, and fewer than
-two layers selected.
-
 ## Building
 
 ```
@@ -70,10 +51,3 @@ To notarize and staple:
 
 The icon is built from the master artwork with `pixpro_icon SortLayers`.
 
-## Version history
-
-**2.0.0** — rewritten to work with any Pixelmator Pro build; proper bundle
-identity, Developer ID signature and notarization; new icon; guards for the
-three cases that used to fail silently.
-
-**1.x** — Shawn's original compiled AppleScript.
