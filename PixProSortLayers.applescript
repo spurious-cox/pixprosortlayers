@@ -19,7 +19,7 @@
 -- it to the front of its own parent — so the layer order ends up matching the
 -- layout, left to right or top to bottom. Visibility is restored at the end.
 
-property scriptVersion : "2.0.0"
+property scriptVersion : "2.0.2"
 property kPixIDs : {"com.apple.pixelmator", "com.pixelmatorteam.pixelmator.x"}
 -- Set by pixTarget() before anything talks to Pixelmator. Every `tell
 -- application pixApp` below depends on it.
@@ -58,9 +58,17 @@ on pixTarget()
 	-- back to its bundle path through ps.
 	set frontPath to ""
 	try
-		tell application "System Events"
-			set fpid to unix id of (first application process whose frontmost is true)
-		end tell
+		-- Bounded: asking System Events which app is frontmost needs Automation
+		-- permission, and on a first run that call sits there waiting for a
+		-- consent prompt. If the prompt does not appear — and for a freshly
+		-- built applet it may not — the app hangs with no window and nothing
+		-- to click. Five seconds, then carry on: the frontmost check only
+		-- orders the candidates, it does not find them.
+		with timeout of 5 seconds
+			tell application "System Events"
+				set fpid to unix id of (first application process whose frontmost is true)
+			end tell
+		end timeout
 		set frontPath to do shell script "/bin/ps -p " & fpid & " -o args= | /usr/bin/sed 's|/Contents/MacOS/.*||'"
 	end try
 

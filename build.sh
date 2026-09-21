@@ -13,6 +13,11 @@ set -e
 cd "${0:A:h}"
 
 APP="PixProSortLayers.app"
+# Read from the script itself, so the bundle can never claim a version the
+# code does not. Hard-coding it here shipped an app whose dialogs and whose
+# Get Info disagreed.
+VERSION=$(/usr/bin/sed -n 's/^property scriptVersion : "\(.*\)"/\1/p' PixProSortLayers.applescript)
+[[ -n "$VERSION" ]] || { echo "error: no scriptVersion in PixProSortLayers.applescript" >&2; exit 1; }
 SIGN_ID="4208ABA3EC12F24C1F09C7BB624EFF68B44259DB"   # Developer ID Application
 
 if ! security find-identity -p codesigning | grep -q "$SIGN_ID"; then
@@ -32,17 +37,18 @@ cp PixProSortLayers.icns "$APP/Contents/Resources/PixProSortLayers.icns"
 rm -f "$APP/Contents/Resources/applet.icns" "$APP/Contents/Resources/Assets.car"
 
 echo "==> restoring bundle identity (osacompile drops it)"
-/usr/bin/python3 - "$APP" <<'PY'
+/usr/bin/python3 - "$APP" "$VERSION" <<'PY'
 import plistlib, sys
 p = sys.argv[1] + "/Contents/Info.plist"
+version = sys.argv[2]
 d = plistlib.load(open(p, "rb"))
 d.pop("CFBundleIconName", None)
 d.update({
     "CFBundleName": "PixProSortLayers",
     "CFBundleDisplayName": "PixProSortLayers",
     "CFBundleIdentifier": "com.timmccoy.pixprosortlayers",
-    "CFBundleShortVersionString": "2.0.0",
-    "CFBundleVersion": "2.0.0",
+    "CFBundleShortVersionString": version,
+    "CFBundleVersion": version,
     "NSHumanReadableCopyright": "Copyright © 2026 Tim McCoy. All rights reserved.",
     "CFBundleGetInfoString": "PixProSortLayers — sort selected layers by their position on canvas.",
     "NSAppleEventsUsageDescription":
