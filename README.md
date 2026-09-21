@@ -50,4 +50,3 @@ To notarize and staple:
 ```
 
 The icon is built from the master artwork with `pixpro_icon SortLayers`.
-
