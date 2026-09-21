@@ -52,6 +52,11 @@ d.update({
 plistlib.dump(d, open(p, "wb"))
 PY
 
+# The applet stub is copied from THIS machine by osacompile, so it carries
+# this system's minimum macOS. Stamped back before signing — codesign seals
+# whatever it finds. See ~/bin/pixpro_lower_min.
+~/bin/pixpro_lower_min "$APP"
+
 echo "==> signing with Developer ID"
 codesign --force --deep --timestamp --options runtime \
     --entitlements "$HOME/My_Applications/_signing/pixpro-applet.entitlements" \
