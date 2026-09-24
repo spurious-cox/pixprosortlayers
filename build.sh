@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Build, sign and install PixProSortLayers.app — v1.1.0
+# Build, sign and install PixProSortLayers.app — v1.2.0
 #
 #   ./build.sh [--no-install]
 #
@@ -62,6 +62,12 @@ PY
 # this system's minimum macOS. Stamped back before signing — codesign seals
 # whatever it finds. See ~/bin/pixpro_lower_min.
 ~/bin/pixpro_lower_min "$APP"
+
+# The macOS 26+ icon. The stock Assets.car and its CFBundleIconName are
+# removed above; this installs an Assets.car holding the app's own Icon
+# Composer icon, which macOS 26+ uses instead of the .icns (still what
+# macOS 13-25 show). See ~/bin/glass_icon.
+~/bin/glass_icon "$APP" icon/AppIcon.icon
 
 echo "==> signing with Developer ID"
 codesign --force --deep --timestamp --options runtime \

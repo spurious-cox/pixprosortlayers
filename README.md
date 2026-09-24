@@ -1,4 +1,4 @@
-# PixProSortLayers 2.0.2
+# PixProSortLayers 2.0.3
 
 Reorders the selected Pixelmator Pro layers to match where they sit on the
 canvas: **Horizontal** puts the leftmost layer at the top of the Layers list,
