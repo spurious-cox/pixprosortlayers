@@ -43,10 +43,4 @@ Compiles the applet, installs the icon, restores the bundle identity that
 `osacompile` drops each time, signs with Developer ID, and installs to
 `/Applications`. Pass `--no-install` to stop before the copy.
 
-To notarize and staple:
-
-```
-~/My_Applications/_signing/pixpro_release.sh all /Applications/PixProSortLayers.app
-```
-
-The icon is built from the master artwork with `pixpro_icon SortLayers`.
+To notarize and staple, submit it with `xcrun notarytool` and staple the result with `xcrun stapler`.
