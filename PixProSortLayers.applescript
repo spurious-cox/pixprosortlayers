@@ -19,7 +19,7 @@
 -- it to the front of its own parent — so the layer order ends up matching the
 -- layout, left to right or top to bottom. Visibility is restored at the end.
 
-property scriptVersion : "2.1.0"
+property scriptVersion : "2.1.1"
 property kPixIDs : {"com.apple.pixelmator", "com.pixelmatorteam.pixelmator.x"}
 -- Set by pixTarget() before anything talks to Pixelmator. Every `tell
 -- application pixApp` below depends on it.
