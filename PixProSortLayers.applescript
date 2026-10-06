@@ -19,11 +19,82 @@
 -- it to the front of its own parent — so the layer order ends up matching the
 -- layout, left to right or top to bottom. Visibility is restored at the end.
 
-property scriptVersion : "2.0.3"
+property scriptVersion : "2.1.0"
 property kPixIDs : {"com.apple.pixelmator", "com.pixelmatorteam.pixelmator.x"}
 -- Set by pixTarget() before anything talks to Pixelmator. Every `tell
 -- application pixApp` below depends on it.
 property pixApp : ""
+
+-- Update check, the same in every PixPro app: asks GitHub for the newest
+-- release at most once a day, gives up after three seconds, says nothing when
+-- this build is current or the network is away, and otherwise adds
+-- "Update available" to what the app already shows. It never downloads or
+-- replaces anything.
+property kSlug : "pixprosortlayers"
+property kDefaults : "$HOME/.pixprosortlayers_defaults"
+
+on versionParts(v)
+	set out to {}
+	set AppleScript's text item delimiters to "."
+	set pieces to text items of v
+	set AppleScript's text item delimiters to ""
+	repeat with piece in pieces
+		set digits to ""
+		repeat with c in (characters of (piece as text))
+			if c is in "0123456789" then set digits to digits & c
+		end repeat
+		if digits is "" then set digits to "0"
+		set end of out to digits as integer
+	end repeat
+	return out
+end versionParts
+
+on isNewer(tag, mine)
+	-- Compared as integers, so 3.10.0 comes out above 3.9.0 rather than below.
+	set a to my versionParts(tag)
+	set b to my versionParts(mine)
+	repeat with i from 1 to 3
+		set x to 0
+		set y to 0
+		if i ≤ (count a) then set x to item i of a
+		if i ≤ (count b) then set y to item i of b
+		if x > y then return true
+		if x < y then return false
+	end repeat
+	return false
+end isNewer
+
+on latestTag()
+	set today to do shell script "/bin/date +%Y-%m-%d"
+	set lastDay to ""
+	try
+		set lastDay to do shell script "defaults read " & kDefaults & " updateCheckedOn 2>/dev/null"
+	end try
+	if lastDay is today then
+		try
+			return do shell script "defaults read " & kDefaults & " updateLatestTag 2>/dev/null"
+		end try
+		return ""
+	end if
+	try
+		set tag to do shell script "/usr/bin/curl -sL --max-time 3 -H \"Accept: application/vnd.github+json\" https://api.github.com/repos/spurious-cox/" & kSlug & "/releases/latest | /usr/bin/grep -o '\"tag_name\": *\"[^\"]*\"' | /usr/bin/head -1 | /usr/bin/cut -d'\"' -f4"
+		do shell script "defaults write " & kDefaults & " updateLatestTag " & quoted form of tag
+		do shell script "defaults write " & kDefaults & " updateCheckedOn " & quoted form of today
+		return tag
+	on error
+		return ""
+	end try
+end latestTag
+
+on updateNotice(mine)
+	set tag to my latestTag()
+	if tag is "" then return ""
+	if not (my isNewer(tag, mine)) then return ""
+	set t to tag
+	if t starts with "v" then set t to text 2 thru -1 of t
+	return return & return & "Update available: " & t & "  —  brew upgrade --cask " & kSlug
+end updateNotice
+
 
 on pixTarget()
 	set rawPaths to {}
@@ -129,7 +200,7 @@ using terms from application "Pixelmator Pro"
 			end if
 
 			tell me to activate
-			set aButton to display dialog "Sort the selected layers by their position:" & return & return & "Horizontal puts the leftmost layer at the top of the list; Vertical puts the topmost one there." buttons {"Cancel", "Vertical", "Horizontal"} default button "Horizontal" with title ("PixProSortLayers v" & scriptVersion)
+			set aButton to display dialog "Sort the selected layers by their position:" & return & return & "Horizontal puts the leftmost layer at the top of the list; Vertical puts the topmost one there." & return & return & "Original by Shawn S, who wrote it for me. It is still available on his Etsy site." & my updateNotice(scriptVersion) buttons {"Cancel", "Vertical", "Horizontal"} default button "Horizontal" with title ("PixProSortLayers v" & scriptVersion)
 			set sort_direction to (button returned of aButton)
 
 			repeat with iter from 1 to (count of sel_lays)
