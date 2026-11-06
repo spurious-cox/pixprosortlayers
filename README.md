@@ -67,6 +67,10 @@ To notarize and staple, submit it with `xcrun notarytool` and staple the result 
 
 Open an issue: https://github.com/spurious-cox/pixprosortlayers/issues
 
+## Trademarks
+
+Pixelmator and Pixelmator Pro are trademarks of the Pixelmator Team Ltd. PixPro apps are independent and are not affiliated with, endorsed by or sponsored by Pixelmator or Apple.
+
 ## License
 
 MIT. See LICENSE.
