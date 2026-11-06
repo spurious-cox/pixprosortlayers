@@ -8,6 +8,8 @@ canvas: **Horizontal** puts the leftmost layer at the top of the Layers list,
 Etsy site.** I rewrote it in September 2026 so it behaves like the rest of the
 PixPro family; the sorting itself is Shawn's and is unchanged.
 
+Shawn S wrote the original sorting and keeps his rights to it; the MIT license in this repository covers only my own code and changes.
+
 ### [⬇︎ Download the latest release](https://github.com/spurious-cox/pixprosortlayers/releases/latest)
 
 Notarized and stapled by Apple — open the DMG and drag PixProSortLayers to
